@@ -1,0 +1,13 @@
+.line {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  margin: 10px 0 20px 0;
+}
+.form-btn {
+  margin-left: 110px !important;
+}
+.form-btn .btn {
+  margin-right: 20px;
+}
+.form-content {
+  height: 50px;
+}

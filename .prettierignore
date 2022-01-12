@@ -1,0 +1,18 @@
+# 依赖包
+node_modules
+
+# 发布目录
+public
+
+# 脚本和配置目录
+scripts
+config
+
+# IDE
+.vscode
+.history
+
+# # 忽略对css文件的处理
+# *.less
+# *.scss
+# *.css

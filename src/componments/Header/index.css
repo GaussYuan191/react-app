@@ -1,0 +1,18 @@
+.header {
+  height: 50px;
+  background-color: #3c8dbc;
+}
+.header-r {
+  line-height: 50px;
+  width: 184px;
+  margin-right: 50px;
+  color: #fff;
+}
+.header-r .username,
+.header-r .back-text {
+  margin-left: 10px;
+}
+.trigger {
+  font-size: 18px;
+  margin-left: 20px;
+}
