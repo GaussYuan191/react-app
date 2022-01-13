@@ -35,7 +35,7 @@ service.interceptors.response.use(
       const res = response.data
       
       if (res.code == null) {
-        
+        message.error(res.msg);
         return Promise.reject('error')
       } else {
         return Promise.resolve(response.data.data)
