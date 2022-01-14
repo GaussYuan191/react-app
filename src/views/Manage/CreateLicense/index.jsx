@@ -176,12 +176,14 @@ export default class CreateLicense extends Component {
 		});
 		return newList;
 	};
+	// 深拷贝对象
 	deepCopy = (object) => {
 		if (!object || typeof object !== "object") return;
 	  
 		let newObject = Array.isArray(object) ? [] : {};
 	  
 		for (let key in object) {
+			// 防止拷贝对象原型链上的属性 hasOwnProperty,不会判断原型链上的属性
 		  if (object.hasOwnProperty(key)) {
 			newObject[key] =
 			  typeof object[key] === "object" ? this.deepCopy(object[key]) : object[key];
