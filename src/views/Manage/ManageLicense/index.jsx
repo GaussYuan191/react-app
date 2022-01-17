@@ -10,12 +10,20 @@ import {
 	Table,
 	Modal,
 	Tag,
+	message,
 } from 'antd';
 import './index.less';
+import LicenseInfo from '@/componments/LicenseInfo'
 import { getLicenseList } from '@/api/getLicenseList.js';
 import { listAllSub } from '@/api/listAllSub.js';
 import { queryFunctionCode } from '@/api/queryFunctionCode.js';
 import { exportLicense } from '@/api/exportLicense.js';
+
+import { saveAs } from 'file-saver';
+//保存文件
+import JsZip from 'jszip';
+//把文件压缩成zip
+
 const { Option } = Select;
 const { Column } = Table;
 let data = [
@@ -47,6 +55,7 @@ export default class ManageLicense extends Component {
 		licenseDefault: data,
 		licenseData: [],
 		selectNode: [],
+		visibleUpdate: false
 	};
 	onFinish = (values) => {
 		let { licenseData } = this.state;
@@ -65,56 +74,49 @@ export default class ManageLicense extends Component {
 	};
 	downloadLicense = () => {
 		const { selectNode } = this.state;
-		let ids = selectNode.join();
-		exportLicense(ids).then(
-			(res) => {
-				console.log('222');
-
-				const base64ToBlob=(code)=>{
-					const raw=window.atob(code)
-					const rawLength=raw.length
-					const uInt8Array = new Int8Array(rawLength)
-					for(let i=0;i<rawLength;i++){
-						uInt8Array[i]=raw.charCodeAt(i)
-					}
-					return new Blob([uInt8Array])
+		if (selectNode.length == 0) {
+			message.error('请选择一条记录!');
+		} else {
+			let ids = selectNode.join();
+			exportLicense(ids).then(
+				(res) => {
+					let url = window.URL.createObjectURL(
+						new Blob([res.data], { type: res.data.type })
+					);
+					// 创建A标签
+					let link = document.createElement('a');
+					link.style.display = 'none';
+					link.href = url;
+					// 设置的下载文件文件名
+					const fileName = res.headers['content-disposition'].match("[^=]+$")[0].replace(/\"/g, "");
+					// 触发点击方法
+					link.setAttribute('download', fileName);
+					document.body.appendChild(link);
+					link.click();
+				},
+				(err) => {
+					console.log(err);
 				}
-
-				let reader = new FileReader();
-				const blob = new Blob([res]);
-				reader.readAsText(blob);
-				console.log('222');
-				reader.onload = (e) => {
-					console.log(e);
-					if (JSON.parse(e.target.result).status === 200) {
-						const fileName = '附件名'; //附件名包含附件类型
-						console.log('222');
-						if ('download' in document.createElement('a')) {
-							console.log('下载成功');
-							console.log('aaa', e.target.result)
-							let data = base64ToBlob(JSON.parse(e.target.result));
-							const link = document.createElement('a');
-							link.download = fileName;
-							link.style.display = 'none';
-							link.href = URL.createObjectURL(data);
-							document.body.appendChild(link);
-							link.click();
-							URL.revokeObjectURL(link.href);
-							document.body.removeChild(link);
-						} else {
-							navigator.msSaveBlob(data, fileName);
-						}
-					}
-				};
-			},
-			(err) => {
-				console.log(err);
-			}
-		);
-		console.log('开始下载', ids);
+			);
+		}
 	};
 	updateLicense = () => {
 		console.log('开始更新');
+		let { selectNode } = this.state;
+		let {licenseList} = this.state;
+		
+		if (selectNode.length == 0) {
+			message.error('请选择一条记录');
+		} else if (selectNode.length >= 2) {
+			message.error('请选择且只能选择一条数据');
+		} else {
+			console.log(selectNode)
+			let newLicenseNode = licenseList.find(item => item.key == selectNode[0].key)
+			console.log('yaoo', newLicenseNode)
+			this.showUpdate()
+		}
+		
+		
 	};
 	deleteLicense = () => {
 		console.log('开始删除');
@@ -147,12 +149,20 @@ export default class ManageLicense extends Component {
 	showModal = () => {
 		this.setState({ visible: true });
 	};
+	showUpdate = () => {
+		this.setState({visibleUpdate: true});
+	}
 	handleCancel = () => {
 		console.log('Clicked cancel button');
 		this.setState({ visible: false, licenseNode: {} });
 	};
+	handleUpdateCancel = () => {
+		console.log('取消修改');
+		this.setState({visibleUpdate: false})
+	}
 	// 记录选中的值的ID
 	onChange = (value) => {
+		console.log(value)
 		this.setState({ selectNode: value });
 	};
 	// 深拷贝
@@ -202,7 +212,7 @@ export default class ManageLicense extends Component {
 		});
 	};
 	render() {
-		const { licenseList, visible, licenseNode, licenseDefault } = this.state;
+		const { licenseList, visible, licenseNode, licenseDefault, visibleUpdate } = this.state;
 		console.log(visible);
 		return (
 			<div>
@@ -252,6 +262,16 @@ export default class ManageLicense extends Component {
 							}}
 						/>
 					</Table>
+				</Modal>
+				<Modal
+					title="许可明细"
+					visible={visibleUpdate}
+					onCancel={this.handleUpdateCancel}
+					width={800}
+					footer={null}
+					destroyOnClose="true"
+				>
+				<LicenseInfo dataSource={licenseDefault} licenseNode={licenseNode}></LicenseInfo>	
 				</Modal>
 				<Form ref={this.formRef} name="selectLicense" onFinish={this.onFinish}>
 					<Row>
@@ -355,8 +375,8 @@ export default class ManageLicense extends Component {
 					/>
 					<Column
 						title="操作"
-						dataIndex="demo"
-						key="demo"
+						dataIndex="click"
+						key="click"
 						align="center"
 						render={(text, record) => {
 							return (

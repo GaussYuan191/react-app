@@ -18,15 +18,16 @@ export default class Home  extends Component {
       
       <Layout>
         <Sider trigger={null} collapsible collapsed={user.collapsed} 
-      style={{
-        overflow: 'auto',
-        height: '100vh',
-        position: 'fixed',
-        left: 0,
-      }}>
+      // style={{
+      //   overflow: 'auto',
+      //   height: '100%',
+      //   // position: 'fixed',
+      //   // left: 0,
+      // }}
+      >
         <Menus {...this.props}></Menus>
         </Sider>
-        <Layout className="site-layout" style={{ marginLeft: 200 }}>
+        <Layout className="site-layout" style={{}}>
           <Header className="site-layout-background" style={{ padding: 0 , height:50}}>
             
             <Headers></Headers>
@@ -42,6 +43,7 @@ export default class Home  extends Component {
               backgroundColor: '#fff'
             }}
           >
+            <HomeLink></HomeLink>
 
             {
               this.props.children
