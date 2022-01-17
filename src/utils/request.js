@@ -3,6 +3,7 @@ import store from "@/store";
 import { isAuthenticated } from '@/utils/auth'
 import loginOut from "@/utils/loginOut"
 import { message, Space } from 'antd';
+import Base64  from 'base-64';
 //创建axios实例
 const service = axios.create({
     timeout: 15000
@@ -32,9 +33,11 @@ service.interceptors.response.use(
       /**
        * code为非200是抛错 可结合自己业务进行修改
        */
-      const res = response.data
-      
-      if (res.code == null) {
+      const res = response.data;
+      if (!res.hasOwnProperty('code')) {
+        return Promise.resolve(res)
+      }
+      if (res.code === null && res.hasOwnProperty('code')) {
         message.error(res.msg);
         return Promise.reject('error')
       } else {

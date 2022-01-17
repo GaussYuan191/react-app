@@ -66,11 +66,7 @@ const columns = [
 ];
 
 function chanageData() {
-	// this.setState({loading: true})
 	this.chanageTree();
-	// setTimeout(()=> {
-	// 	this.setState({loading: false})
-	// }, 400)
 }
 let checkedNode = null; // 保存修改的节点
 let data = [
