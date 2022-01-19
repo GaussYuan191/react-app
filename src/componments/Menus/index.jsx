@@ -18,7 +18,7 @@ class Menus extends Component {
       render() {
         return (
           <div>
-          <div className="logo">许可管理系统</div>
+          <div className="logo">{user.collapsed ? 'YSS' : '许可管理系统'}</div>
           <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']} onClick={this.handleClick} >
     
 
