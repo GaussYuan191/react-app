@@ -22,7 +22,7 @@ let data = [
 	},
 ];
 export default class LicenseInfo extends Component {
-	state = { licenseList: data, loading: false };
+	state = { licenseList: data, loading: false ,getLicenseList: () => {}};
 	// 处理树形数据
 	dealTree = (nums, parentKey) => {
 		if (nums == null) return;
@@ -112,29 +112,13 @@ export default class LicenseInfo extends Component {
 	};
     // 如果有传入权限数据，展示初始数据
     dataDefaultInit = () => {
-        let { licenseList , licenseNode} = this.props;
-        console.log("传入的值",licenseList,licenseNode)
+        let { licenseList , licenseData} = this.props;
+        console.log("传入的值",licenseList,licenseData)
+		licenseList[0].children = licenseData[0];
+		licenseList[1].children = licenseData[1];
+		licenseList[2].children = licenseData[2];
         let dealLicenseList = (record) => {
 			if (record == null) return null;
-			// console.log('record.children', record);
-			// if (checkedNode != null && record.key == checkedNode.key) {
-			// 	if (record.children != null) {
-			// 		let dealChildren = (list, thisRight) => {
-			// 			if (list == null) return;
-			// 			if (list.children != null) {
-			// 				list.children.forEach((item) => {
-			// 					dealChildren(item, thisRight);
-			// 				});
-			// 			}
-			// 			list.right = thisRight;
-			// 		};
-			// 		record.children.forEach((item) => {
-			// 			dealChildren(item, record.right);
-			// 		});
-			// 	}
-			// 	checkedNode = null;
-			// 	return;
-			// }
 			if (record.children != null) {
 				record.children.forEach((item) => {
 					dealLicenseList(item);
@@ -144,7 +128,6 @@ export default class LicenseInfo extends Component {
 					chFlag =
 						chFlag == -1 ? item.right : chFlag == item.right ? chFlag : -2;
 				});
-				// console.log('ChFlog1111111', chFlag);
 				if (chFlag != -2) {
 					record.right = chFlag;
 				}
@@ -177,21 +160,14 @@ export default class LicenseInfo extends Component {
 		let { licenseList } = this.state;
 
 		return licenseList;
-	};
-	componentDidMount = () => {
-		setTimeout(() => {
-            if (this.props.licenseList[0].children == null) {
-                this.dataInit();
-            }
-			else {
-                console.log('默认值',this.props.licenseList)
-                this.dataDefaultInit()
-            }
-			this.props.getLiceseInfo(this.getLicenseList);
-		}, 1000);
-	};
+	}; 
+	static getDerivedStateFromProps (props, state) {
+		console.log(props, state)
+		return {...props}
+	}
 	render() {
 		let { licenseList, loading } = this.state;
+		console.log(this.state)
 		return (
 			<Card title="许可明细" headStyle={{ backgroundColor: '#d9edf7' }}>
 				<Space align="center" style={{ marginBottom: 16 }}></Space>
@@ -209,12 +185,14 @@ export default class LicenseInfo extends Component {
 						key="right"
 						render={(text, record) => {
 							const { right } = record;
+
 							return (
 								<Select
 									options={[
-										{ label: '有权限', value: 1 },
-										{ label: '无权限', value: 0 },
+										{ label: '有权限', value: '1' },
+										{ label: '无权限', value: '0' },
 									]}
+									optionFilterProp="label"
 									value={right}
 									onChange={(value) => {
 										record.right = value;
