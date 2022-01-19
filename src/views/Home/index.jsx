@@ -43,7 +43,7 @@ export default class Home  extends Component {
               backgroundColor: '#fff'
             }}
           >
-            <HomeLink></HomeLink>
+            {/* <HomeLink></HomeLink> */}
 
             {
               this.props.children

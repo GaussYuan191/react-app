@@ -103,7 +103,7 @@ export default class ManageLicense extends Component {
 	};
 	// 更新权限数据
 	updateLicense = () => {
-		const {licenseDefault,selectNode,licenseList} = this.state
+		const {licenseDefault,selectNode} = this.state
 		console.log('开始更新', licenseDefault);	
 		if (selectNode.length == 0) {
 			message.error('请选择一条记录');
