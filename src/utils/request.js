@@ -1,9 +1,9 @@
+// 一般请求axios
 import axios from "axios";
 import store from "@/store";
 import { isAuthenticated } from '@/utils/auth'
 import loginOut from "@/utils/loginOut"
-import { message, Space } from 'antd';
-import Base64  from 'base-64';
+import { message } from 'antd';
 //创建axios实例
 const service = axios.create({
     timeout: 15000
@@ -14,7 +14,6 @@ const {mine : {user}} = store.getState()
 
 // request拦截器
 service.interceptors.request.use(config => {
-    console.log("发起请求",config, user.token);
     // 判断请求中是否携带token
     if (isAuthenticated) {
       config.headers['Authorization'] = user.token;
@@ -33,15 +32,14 @@ service.interceptors.response.use(
       /**
        * code为非200是抛错 可结合自己业务进行修改
        */
+
       const res = response.data;
-      if (!res.hasOwnProperty('code')) {
-        return Promise.resolve(res)
-      }
-      if (res.code === null && res.hasOwnProperty('code')) {
+      // console.log(res)
+      if (res.code === null) {
         message.error(res.msg);
         return Promise.reject('error')
       } else {
-        return Promise.resolve(response.data.data)
+        return Promise.resolve(res.data)
       }
     },
     error => {
@@ -51,13 +49,6 @@ service.interceptors.response.use(
         message.error('登录失效，请重新登录！！');
         loginOut();
       }
-      
-      
-    //   Message({
-    //     message: error.message,
-    //     type: 'error',
-    //     duration: 3 * 1000
-    //   })
       return Promise.reject(error)
     }
   )
