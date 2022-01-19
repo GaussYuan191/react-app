@@ -45,11 +45,15 @@ export default class index extends Component {
         this.setState({customerLists: newlist});
     }
     componentDidMount = () => {
-        setTimeout(() => {
+        // setTimeout(() => {
             console.log('父组件接收',this.props.customerList);
             this.initData();
-        },1000);
+        // },1);
     }
+	UNSAFE_componentWillReceiveProps = (nextProp) => {
+		console.log("props11,", nextProp)
+		console.log('默认值11',this.props.licenseList)
+	}
     render() {
         
         const {customerLists} = this.state;
