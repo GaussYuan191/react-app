@@ -13,14 +13,13 @@ import {
 	message,
 } from 'antd';
 import './index.less';
-import LicenseInfo from '@/componments/LicenseInfo'
+import LicenseInfo from '@/componments/LicenseInfo';
 import BaseInfo from '@/componments/BaseInfo';
 import { getLicenseList } from '@/api/getLicenseList.js';
 import { listAllSub } from '@/api/listAllSub.js';
 import { queryFunctionCode } from '@/api/queryFunctionCode.js';
 import { exportLicense } from '@/api/exportLicense.js';
-
-
+import moment from 'moment'; 
 const { Option } = Select;
 const { Column } = Table;
 let data = [
@@ -53,8 +52,10 @@ export default class ManageLicense extends Component {
 		licenseDefault: data,
 		licenseData: [],
 		selectNode: [],
+		tempNode: [],
+		customerOptions: [],
 		visibleUpdate: false,
-		getLicense: () => {}
+		getLicense: () => {},
 	};
 	onFinish = (values) => {
 		let { licenseData } = this.state;
@@ -72,7 +73,7 @@ export default class ManageLicense extends Component {
 		this.setState({ licenseList: licenseData });
 		this.formRef.current.resetFields();
 	};
-	// 下载文件 
+	// 下载文件
 	downloadLicense = () => {
 		const { selectNode } = this.state;
 		if (selectNode.length == 0) {
@@ -89,7 +90,9 @@ export default class ManageLicense extends Component {
 					link.style.display = 'none';
 					link.href = url;
 					// 设置的下载文件文件名
-					const fileName = res.headers['content-disposition'].match("[^=]+$")[0].replace(/\"/g, "");
+					const fileName = res.headers['content-disposition']
+						.match('[^=]+$')[0]
+						.replace(/\"/g, '');
 					// 触发点击方法
 					link.setAttribute('download', fileName);
 					document.body.appendChild(link);
@@ -103,19 +106,34 @@ export default class ManageLicense extends Component {
 	};
 	// 更新权限数据
 	updateLicense = () => {
-		const {licenseDefault,selectNode} = this.state
-		console.log('开始更新', licenseDefault);	
+		const { licenseDefault, selectNode } = this.state;
+		console.log('开始更新', licenseDefault);
 		if (selectNode.length == 0) {
 			message.error('请选择一条记录');
 		} else if (selectNode.length >= 2) {
 			message.error('请选择且只能选择一条数据');
 		} else {
 			this.dealLicenseNode(selectNode);
-			this.showUpdate()
+			this.setState({ tempNode: selectNode[0] });
+			console.log(this.baseInfoForm.current);
+			// setTimeout(() => {
+			// 	this.baseInfoForm.current.setFieldsValue({permission:'informal',customerId: '22011723580403000125'})
+			// }, 500)
+			this.showUpdate();
 		}
-		
-		
 	};
+	// 处理修改提交
+	dealSubmit = () => {
+		const {licenseDefault} = this.setState;
+		this.baseInfoForm.current.validateFields().then(res=> {
+			console.log('验证',res);
+		})
+		console.log('开始提交')
+	}
+	// 处理修改后的结果
+	onTableChange = (data) => {
+		this.setState({licenseDefault:data})
+	}
 	// 删除权限数据
 	deleteLicense = () => {
 		console.log('开始删除');
@@ -134,70 +152,71 @@ export default class ManageLicense extends Component {
 		};
 	};
 	// 初始化树形数据
-	dealTree = (nums) => {
+	dealTree = (nums, parentKey) => {
 		if (nums == null) return;
 		if (nums.children != null) {
 			nums.children.forEach((item) => {
-				this.dealTree(item);
+				this.dealTree(item, parentKey);
 			});
 		}
 		nums.name = nums.menuName || nums.dicExplain;
 		nums.key = nums.menuCode || nums.dicCode;
 		nums.right = 1; // 初始化权限
+		nums.parentKey = parentKey; // 绑定祖父节点的key
 	};
 	// 处理权限数据
-	dealLicenseNode = (selectNode)=> {
-		const {licenseDefault} = this.state;
-		const {customerLicenseFunctionList, customerLicenseInterfaceList, customerLicenseDataList} = selectNode;
-		console.log("开始处理数据aa", selectNode, licenseDefault)
+	dealLicenseNode = (selectNode) => {
+		const { licenseDefault } = this.state;
+		console.log('开始处理数据aa', selectNode, licenseDefault);
 		// 深拷贝防止setSate时页面数据不更新
 		let newLicenseDefault = this.deepCopy(licenseDefault);
 		let dealNode = (nodes, licenses) => {
 			if (!nodes) return;
 			if (nodes.children) {
 				// 先序遍历
-				nodes.children.forEach(item => dealNode(item, licenses));
+				nodes.children.forEach((item) => dealNode(item, licenses));
 				// 如果孩子节点的right 都相同, 则父亲节点的right与孩子节点的right相同
 				// 如果孩子节点的right 不同, 则父亲节点的right保持不变
 				let chFlag = -1;
-				nodes.children.forEach(item => {
-					chFlag = chFlag == -1 ? item.right : chFlag == item.right ? chFlag : -2;
-				})
-				// chFlag == -2 表示所有孩子节点right不同，!= 2 表示孩子节点right相同，chFlag 保存了 孩子节点的right值 
+				nodes.children.forEach((item) => {
+					chFlag =
+						chFlag == -1 ? item.right : chFlag == item.right ? chFlag : -2;
+				});
+				// chFlag == -2 表示所有孩子节点right不同，!= 2 表示孩子节点right相同，chFlag 保存了 孩子节点的right值
 				if (chFlag != -2) {
 					nodes.right = chFlag;
 				}
 			} else {
 				// 如果是叶子节点，则通过key到权限列表中找对应的right值,
-				let node = licenses.find(item => item.code == nodes.key)
+				let node = licenses.find((item) => item.code == nodes.key);
 				nodes.right = node.right;
 			}
-		}
+		};
 		newLicenseDefault.forEach((item, index) => {
 			dealNode(item, selectNode[0][item.key]);
-		})
-		console.log("处理结果aaa", newLicenseDefault)
-		this.setState({licenseDefault: newLicenseDefault})
-	}
+		});
+		console.log('处理结果aaa', newLicenseDefault);
+		this.setState({ licenseDefault: newLicenseDefault });
+	};
 	// 显示详情页面
 	showModal = () => {
 		this.setState({ visible: true });
 	};
 	// 显示更新页面
 	showUpdate = () => {
-		this.setState({visibleUpdate: true});
-	}
+		this.setState({ visibleUpdate: true });
+	};
 	// 取消显示详情页面
 	handleCancel = () => {
 		this.setState({ visible: false, licenseNode: {} });
 	};
 	// 取消显示更新页面
 	handleUpdateCancel = () => {
-		this.setState({visibleUpdate: false, licenseNode: {}})
-	}
+		this.setState({ visibleUpdate: false, licenseNode: {} });
+	};
 	// 记录选中的值的数据
 	onChange = (selectedRowKeys, selectedRows) => {
-		this.setState({ selectNode: selectedRows});
+		this.setState({ selectNode: selectedRows });
 	};
 	// 深拷贝
 	deepCopy = (obj) => {
@@ -214,12 +233,12 @@ export default class ManageLicense extends Component {
 	};
 	// 获取子组件中的权限数据
 	getLiceseInfo = (data) => {
-		this.setState({getLicense: data})
-	}
+		this.setState({ getLicense: data });
+	};
 	// 组件挂载
 	componentDidMount() {
 		this.dataInit();
-	};
+	}
 	// 初始化数据
 	dataInit = () => {
 		let { licenseDefault } = this.state;
@@ -232,7 +251,7 @@ export default class ManageLicense extends Component {
 			(res) => {
 				res.forEach((arr, index) => {
 					arr.forEach((item) => {
-						this.dealTree(item);
+						this.dealTree(item, licenseDefault[index].key);
 					});
 					newLicenseList[index].children = arr;
 				});
@@ -245,14 +264,35 @@ export default class ManageLicense extends Component {
 
 		getLicenseList(1, 1000).then((res) => {
 			console.log(res);
-			res.list.map((item) => {
+			let customerOptions = [];
+			res.list.forEach((item) => {
 				item.key = item.id;
+				customerOptions.push({
+					label: item.name,
+					value: item.id,
+				});
 			});
-			this.setState({ licenseList: res.list, licenseData: res.list });
+			this.setState({ licenseList: res.list, customerOptions });
 		});
 	};
 	render() {
-		const { licenseList, visible, licenseNode, licenseDefault, visibleUpdate } = this.state;
+		const {
+			licenseList,
+			visible,
+			licenseNode,
+			selectNode,
+			licenseDefault,
+			visibleUpdate,
+		} = this.state;
+		let licensesTime = [], key, customerName, permission;
+		if (selectNode.length !== 0) {
+			let beginDate = selectNode[0].beginDate== null ? null :moment(selectNode[0].beginDate);
+			let endDate = selectNode[0].endDate== null ? null : moment(selectNode[0].endDate);
+			licensesTime.push(beginDate, endDate);
+			key = selectNode[0].key;
+			customerName = selectNode[0].customerName;
+			permission = selectNode[0].permission;
+		}
 		return (
 			<div>
 				<Modal
@@ -299,12 +339,26 @@ export default class ManageLicense extends Component {
 					footer={null}
 					destroyOnClose="true"
 				>
-			    <BaseInfo wrappedComponentRef={(ref) => {
-						this.baseInfoForm = ref;
-					}} ></BaseInfo>	
-				<Divider />	
-			
-				<LicenseInfo licenseList={licenseDefault} getLiceseInfo={this.getLiceseInfo}></LicenseInfo>	
+					<BaseInfo
+						wrappedComponentRef={(ref) => {
+							this.baseInfoForm = ref;
+						}}
+						licensesTime={licensesTime}
+						customerList={[{label:customerName,value:key, key:key}]}
+						permission={permission}
+					></BaseInfo>
+					<Divider />
+
+					<LicenseInfo licenseList={licenseDefault} onTableChange={this.onTableChange}></LicenseInfo>
+					<Divider />
+					<Space size={20}>
+					<Button type="primary" htmlType="submit"  onClick={this.dealSubmit}>
+						提交
+					</Button>
+					<Button htmlType="button" onClick={this.handleUpdateCancel}>
+						取消
+					</Button>
+				</Space> 
 				</Modal>
 				<Form ref={this.formRef} name="selectLicense" onFinish={this.onFinish}>
 					<Row>

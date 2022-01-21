@@ -87,7 +87,12 @@ let resultData = {
 };
 export default class MainLicenseInfo extends Component {
 	formRef = React.createRef();
-	state = { customerList: [], licenseList: data, loading: false , initFlag: false};
+	state = {
+		customerList: [],
+		licenseList: data,
+		loading: false,
+		initFlag: false,
+	};
 	// 提交
 	onFinish = (values) => {
 		let { licenseList } = this.state;
@@ -154,7 +159,7 @@ export default class MainLicenseInfo extends Component {
 	};
 	// 处理客户数据
 	dealCustomer = (lists) => {
-        if ( lists == null || lists == undefined || lists.length == 0 ) return;
+		if (lists == null || lists == undefined || lists.length == 0) return;
 		let newList = [];
 		// label 为显示的值, value 为选中的值
 		lists.map((item) => {
@@ -241,13 +246,18 @@ export default class MainLicenseInfo extends Component {
 		let { licenseList } = this.state;
 		let defaultLicenseList = this.props.defaultLicenseList;
 		let defaultCustomerList = this.props.defaultCustomerList;
-		const {initFlag} = this.setState;
-		console.log(initFlag)
+		const { initFlag } = this.setState;
+		console.log(initFlag);
 		if (initFlag) {
 			return;
 		}
-		console.log('开始处理数据', defaultLicenseList, defaultCustomerList)
-		if (defaultLicenseList == undefined || defaultLicenseList.length == 0 || defaultCustomerList == undefined || Object.keys(defaultCustomerList).length == 0) {
+		console.log('开始处理数据', defaultLicenseList, defaultCustomerList);
+		if (
+			defaultLicenseList == undefined ||
+			defaultLicenseList.length == 0 ||
+			defaultCustomerList == undefined ||
+			Object.keys(defaultCustomerList).length == 0
+		) {
 			return;
 		}
 
@@ -259,14 +269,18 @@ export default class MainLicenseInfo extends Component {
 			licenseList[index].children = arr;
 		});
 		let newlist = this.dealCustomer(defaultCustomerList.list);
-		this.setState({ licenseList: licenseList ,customerList: newlist ,initFlag:true});
+		this.setState({
+			licenseList: licenseList,
+			customerList: newlist,
+			initFlag: true,
+		});
 	};
 	componentDidMount = () => {
 		chanageData = chanageData.bind(this);
 		// 子组件延时加载数据
-		setTimeout(()=> {
+		setTimeout(() => {
 			this.dataInit();
-		},1000);
+		}, 1000);
 	};
 	render() {
 		const { customerList, licenseList, loading } = this.state;
@@ -308,6 +322,7 @@ export default class MainLicenseInfo extends Component {
 								]}
 								labelCol={{ span: 4 }}
 								wrapperCol={{ span: 14 }}
+								initialValue="22011723580403000125"
 							>
 								<Select
 									showSearch

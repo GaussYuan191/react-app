@@ -7,6 +7,7 @@ import { listAllSub } from '@/api/listAllSub.js';
 import { queryFunctionCode } from '@/api/queryFunctionCode.js';
 import { addLicense } from '@/api/addLicense.js';
 import { message, Divider, Space, Button } from 'antd';
+import { values } from 'lodash';
 let data = [
 	{
 		key: 'customerLicenseFunctionList',
@@ -78,6 +79,17 @@ export default class CreateLicense extends Component {
 		console.log("处理结果", newLicenseList)
 		this.setState({ licenseList: newLicenseList });
 	};
+	// 处理客户数据
+	dealCustomer = (lists) => {
+        if ( lists == null || lists == undefined || lists.length == 0 ) return;
+		let newList = [];
+		// label 为显示的值, value 为选中的值
+		lists.map((item) => {
+			newList.push({ label: item.name, value: item.id, key: item.id });
+		});
+		return newList;
+	}
+
 	dataInit = () => {
 		let resultList = [];
 		// 构建请求数组
@@ -94,7 +106,9 @@ export default class CreateLicense extends Component {
 		);
 		getPageList(1, 1000).then(
 			(res) => {
-				this.setState({ defaultCustomerList: res.list });
+				let newList = this.dealCustomer(res.list)
+				console.log('sss',newList)
+				this.setState({ customerList: newList });
 			},
 			(err) => {
 				console.log(err);
@@ -102,10 +116,10 @@ export default class CreateLicense extends Component {
 		);
 	};
 	dealSubmit = () => {
-		let {getLicense} = this.state;
+		let {licenseList} = this.state;
 		this.baseInfoForm.current.validateFields().then(res=> {
 			console.log('验证',res);
-			console.log('aa', getLicense())
+			console.log('aa', licenseList)
 		})
 	}
 	componentDidMount ()  {
@@ -121,11 +135,12 @@ export default class CreateLicense extends Component {
 			}
 		);
 	};
-	getLiceseInfo = (data) => {
-		this.setState({getLicense: data})
+	onTableChange = (values) => {
+		console.log("从子组件获得", values)
+		this.setState({licenseList: values});
 	}
 	render() {
-		const { licenseList, defaultCustomerList } = this.state;
+		const { licenseList, customerList } = this.state;
 
 		return (
 			<div>
@@ -133,10 +148,10 @@ export default class CreateLicense extends Component {
 					wrappedComponentRef={(ref) => {
 						this.baseInfoForm = ref;
 					}}
-					customerList={defaultCustomerList}
+					customerList={customerList}
 				></BaseInfo>
 				<Divider />
-				<LicenseInfo licenseList={licenseList} getLiceseInfo={this.getLiceseInfo} ></LicenseInfo>
+				<LicenseInfo licenseList={licenseList} onTableChange={this.onTableChange}></LicenseInfo>
 				<Divider />
 				<Space size={20}>
 					<Button type="primary" htmlType="submit"  onClick={this.dealSubmit}>

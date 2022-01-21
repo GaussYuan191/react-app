@@ -1,13 +1,5 @@
-import React, { Component } from 'react'
-import {
-	Form,
-	Select,
-	Card,
-	DatePicker,
-	Row,
-	Col,
-
-} from 'antd';
+import React, { Component } from 'react';
+import { Form, Select, Card, DatePicker, Row, Col } from 'antd';
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 // 时间选择器的配置
@@ -22,43 +14,24 @@ const rangeConfig = {
 };
 
 export default class index extends Component {
-    state = {customerLists: []}
-    constructor(props) {
-        super(props);
-        this.baseInfoForm = React.createRef();
-        this.props.wrappedComponentRef(this.baseInfoForm);
-    }
-    
-    // 处理客户数据
-	dealCustomer = (lists) => {
-        if ( lists == null || lists == undefined || lists.length == 0 ) return;
-		let newList = [];
-		// label 为显示的值, value 为选中的值
-		lists.map((item) => {
-			newList.push({ label: item.name, value: item.id, key: item.id });
-		});
-		return newList;
+	state = { customerList: [], permission: null,licensesTime: [] };
+	constructor(props) {
+		super(props);
+		this.baseInfoForm = React.createRef();
+		this.props.wrappedComponentRef(this.baseInfoForm);
 	}
-    initData = () => {
-        let defaultCustomerList =  this.props.customerList
-        let newlist = this.dealCustomer(defaultCustomerList);
-        this.setState({customerLists: newlist});
-    }
-    componentDidMount = () => {
-        // setTimeout(() => {
-            console.log('父组件接收',this.props.customerList);
-            this.initData();
-        // },1);
-    }
-	UNSAFE_componentWillReceiveProps = (nextProp) => {
-		console.log("props11,", nextProp)
-		console.log('默认值11',this.props.licenseList)
+	static getDerivedStateFromProps(props, state) {
+		return { ...props };
 	}
-    render() {
-        
-        const {customerLists} = this.state;
-        return (
-            <Form ref={this.baseInfoForm} name="lincenseList">
+
+	render() {
+		const { customerList, permission, licensesTime } = this.state;
+		console.log(this.state, this.baseInfoForm, '基本信息页面');
+		
+			console.log('per',permission)
+		
+		return (
+			<Form ref={this.baseInfoForm} name="lincenseList">
 				<Card title="基本信息" headStyle={{ backgroundColor: '#d9edf7' }}>
 					{/* 许可权限选择 */}
 					<Row>
@@ -74,7 +47,11 @@ export default class index extends Component {
 								]}
 								labelCol={{ span: 6 }}
 								wrapperCol={{ span: 14 }}
-							>
+								initialValue={
+									
+									permission ? ( permission == '2' ? 'formal' : 'informal') : undefined
+								}
+							> 
 								<Select placeholder="请选择" allowClear>
 									<Option value="informal">试用</Option>
 									<Option value="formal">正式</Option>
@@ -95,13 +72,15 @@ export default class index extends Component {
 								]}
 								labelCol={{ span: 4 }}
 								wrapperCol={{ span: 14 }}
+								initialValue={customerList && customerList[0].value}
 							>
 								<Select
 									showSearch
 									placeholder="请选择"
 									optionFilterProp="label"
 									allowClear
-									options={customerLists}
+									options={customerList}
+									disabled={customerList && customerList.length == 1}
 									filterOption={(inputValue, option) => {
 										return (
 											option.label
@@ -120,8 +99,10 @@ export default class index extends Component {
 								shouldUpdate={(prevValues, currentValues) =>
 									prevValues.permission !== currentValues.permission
 								}
+								
 							>
 								{({ getFieldValue }) =>
+								
 									getFieldValue('permission') === 'informal' ? (
 										<Form.Item
 											name="times"
@@ -129,6 +110,7 @@ export default class index extends Component {
 											{...rangeConfig}
 											labelCol={{ span: 6 }}
 											wrapperCol={{ span: 14 }}
+											initialValue={licensesTime ? (licensesTime[0] == null ? undefined : licensesTime) : undefined}
 										>
 											<RangePicker />
 										</Form.Item>
@@ -138,7 +120,7 @@ export default class index extends Component {
 						</Col>
 					</Row>
 				</Card>
-            </Form>
-        )
-    }
+			</Form>
+		);
+	}
 }
