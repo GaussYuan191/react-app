@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Form, Input, Button, Checkbox } from 'antd';
+import { Form, Input } from 'antd';
 
 export default class FromManage extends Component {
 	constructor(props){

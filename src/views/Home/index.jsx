@@ -18,12 +18,6 @@ export default class Home  extends Component {
       
       <Layout>
         <Sider trigger={null} collapsible collapsed={user.collapsed} 
-      // style={{
-      //   overflow: 'auto',
-      //   height: '100%',
-      //   // position: 'fixed',
-      //   // left: 0,
-      // }}
       >
         <Menus {...this.props}></Menus>
         </Sider>
@@ -38,8 +32,9 @@ export default class Home  extends Component {
             style={{
               margin: 0,
               padding: 16,
-              minHeight: 300,
-              overflow: 'initial',
+              // minHeight: 300,
+              height: 'calc(100vh - 50px)',
+              overflow: 'auto',
               backgroundColor: '#fff'
             }}
           >
