@@ -9,8 +9,10 @@ import {
 	message,
 	Space,
 	Divider,
+	Row,
+	Col,
 } from 'antd';
-
+// 请求接口
 import { getPageList } from '@/api/getPageList.js';
 import { addCustomer } from '@/api/addCustomer.js';
 import { updateCustomer } from '@/api/updateCustomer.js';
@@ -18,15 +20,6 @@ import { deleteCustomer } from '@/api/deleteCustomer';
 import FromManage from '@/componments/FromManage';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 const { confirm } = Modal;
-// 设置表单的布局
-const layout = {
-	labelCol: {
-		span: 0,
-	},
-	wrapperCol: {
-		span: 24,
-	},
-};
 // 设置表格信息
 const columns = [
 	{
@@ -51,71 +44,92 @@ const columns = [
 	},
 ];
 export default class UserManage extends Component {
-	formRef = React.createRef();
-	formDataRef = {};
+	formRef = React.createRef(); //搜索表单
+	formDataRef = {}; //增加、修改表单
 	state = {
-		selectedRowKeys: [], // Check here to configure the default column
-		loading: false,
-		dataList: [],
-		visible: false,
-		confirmLoading: false,
-		total: 10,
-		currentPage: 1
+		selectedRowKeys: [], //保存table勾选行的ID
+		loading: false, //table的加载状态
+		dataList: [], //table的数据
+		visible: false, //Modal的显示状态
+		total: 10, //table数据的数量
+		currentPage: 1, //当前的页的位置
 	};
 
 	// 点击搜索 根据用户名称 模糊匹配
 	onFinish = (values) => {
-		const { dataList } = this.state;
 		this.setState({ loading: true });
 		// 显示加载的效果
+		console.log(values);
 		setTimeout(() => {
-			let newDataList = dataList.list.filter((item) => {
-				return item.name.includes(values.name);
-			});
-			this.setState({ loading: false , dataList: newDataList});
+			this.dataInit(1, 10, values.name);
+			this.setState({ loading: false });
 		}, 400);
 	};
 	// 重置搜索
 	onReset = () => {
-		this.dataInit()
+		this.dataInit();
 		this.formRef.current.resetFields();
 	};
-	
-
+	// 保存勾选行的ID
+	onSelectChange = (selectedRowKeys) => {
+		this.setState({ selectedRowKeys });
+	};
+	// 点击分页的处理
+	onPageChange = (page, pageSize) => {
+		this.dataInit(page, pageSize);
+	};
+	// 显示数据条数
+	showTotal = (total) => {
+		return `共 ${total} 条`;
+	};
+	// 点击取消按钮
+	handleCancel = () => {
+		//点击取消按钮触发的事件
+		console.log('Clicked cancel button');
+		this.setState({
+			visibleAdd: false,
+			visibleUpdate: false,
+			loading: false,
+		});
+	};
+	// 点击新增按钮
 	addData = () => {
 		// 显示新增用户表单
 		this.setState({
 			ModalText: '新增',
-			confirmLoading: false,
 			visibleAdd: true,
 		});
 	};
-	deleteData = () => {
-		const { selectedRowKeys } = this.state;
-		console.log('删除数据', selectedRowKeys);
-		if (selectedRowKeys.length == 0) {
-			message.error('请选择一条记录');
-		} else if (selectedRowKeys.length == 1) {
-			confirm({
-				title: '你确定要删除吗?',
-				icon: <ExclamationCircleOutlined />,
-				onOk: this.handleDelete,
-				onCancel() {
-					console.log('Cancel');
+	// 新增处理操作
+	handleSubmit = () => {
+		let userInfo = {};
+		this.formDataRef.current.validateFields().then((res) => {
+			userInfo = res;
+			addCustomer(userInfo.name, userInfo.code).then(
+				(res) => {
+					message.success('新增成功');
+					setTimeout(() => {
+						this.handleCancel();
+						this.dataInit();
+					}, 300);
+					this.setState({
+						loading: true,
+					});
 				},
-			});
-		} else {
-			message.error('暂不支持多选,请选择一条记录');
-		}
+				(err) => {
+					message.error(err);
+				}
+			);
+		});
 	};
+	// 点击修改按钮
 	updateData = () => {
-		const { selectedRowKeys , dataList} = this.state;
+		const { selectedRowKeys, dataList } = this.state;
 		if (selectedRowKeys.length == 0) {
 			message.error('请选择一条记录');
 		} else if (selectedRowKeys.length == 1) {
 			this.setState({
 				ModalText: '更新页面',
-				confirmLoading: false,
 				visibleUpdate: true,
 			});
 			let updateDatas = dataList.find((item) => {
@@ -131,73 +145,54 @@ export default class UserManage extends Component {
 			message.error('暂不支持多选,请选择一条记录');
 		}
 	};
-	onSelectChange = (selectedRowKeys) => {
-		console.log('selectedRowKeys changed: ', selectedRowKeys);
-		this.setState({ selectedRowKeys });
-	};
-	onPageChange = (page, pageSize) =>{
-		console.log(page, pageSize)
-		this.dataInit(page, pageSize )
-	}
-	// 显示数据条数
-	showTotal = (total) => {
-		return `共 ${total} 条`;
-	};
-	// 点击取消按钮
-	handleCancel = () => {
-		//点击取消按钮触发的事件
-		console.log('Clicked cancel button');
-		this.setState({
-			visibleAdd: false,
-			visibleUpdate: false,
-			loading: false,
-		});
-	};
-	// 新增处理操作
-	handleSubmit = () => {
-		let userInfo = this.formDataRef.current.getFieldsValue(true);
-		this.setState({
-			loading: true,
-		});
-		addCustomer(userInfo.name, userInfo.code).then(
-			(res) => {
-				message.success('新增成功');
-				setTimeout(() => {
-					this.handleCancel();
-					this.dataInit();
-				}, 300);
-			},
-			(err) => {
-				message.error(err);
-			}
-		);
-	};
+
 	// 修改数据操作
 	handleUpdate = () => {
 		const { selectedRowKeys } = this.state;
-		let userInfo = this.formDataRef.current.getFieldsValue(true);
-		console.log('sss', userInfo);
-		updateCustomer(selectedRowKeys[0], userInfo.name, userInfo.code).then(
-			(res) => {
-				message.success('修改成功');
-				setTimeout(() => {
-					this.handleCancel();
-					this.dataInit();
-				}, 300);
-				this.setState({selectedRowKeys:[]})
-			},
-			(err) => {
-				message.error(err);
-			}
-		);
+		this.formDataRef.current.validateFields().then((res) => {
+			let userInfo = res;
+			updateCustomer(selectedRowKeys[0], userInfo.name, userInfo.code).then(
+				(res) => {
+					message.success('修改成功');
+					setTimeout(() => {
+						this.handleCancel();
+						this.dataInit();
+					}, 300);
+					this.setState({ selectedRowKeys: [] });
+				},
+				(err) => {
+					message.error(err);
+				}
+			);
+		});
 	};
+	// 点击删除按钮
+	deleteData = () => {
+		const { selectedRowKeys } = this.state;
+		if (selectedRowKeys.length == 0) {
+			message.error('请选择一条记录');
+		} else {
+			confirm({
+				title: '你确定要删除吗?',
+				icon: <ExclamationCircleOutlined />,
+				onOk: this.handleDelete,
+				onCancel() {
+					console.log('Cancel');
+				},
+			});
+		}
+	};
+
+	// 处理删除的逻辑
 	handleDelete = () => {
 		const { selectedRowKeys } = this.state;
-		deleteCustomer(selectedRowKeys[0]).then(
+		// 要删除的ids
+		let deteleIds = selectedRowKeys.join(',');
+		deleteCustomer(deteleIds).then(
 			(res) => {
 				message.success('删除成功');
 				this.dataInit();
-				this.setState({selectedRowKeys:[]})
+				this.setState({ selectedRowKeys: [] });
 			},
 			(err) => {
 				message.error(err);
@@ -208,17 +203,24 @@ export default class UserManage extends Component {
 	componentDidMount = () => {
 		this.dataInit();
 	};
-	dataInit = (pageNum = 1, pageSize = 10) => {
+	// 初始化数据,pageNum 页数 默认为 1, pageSize 一页数组的数量 默认为 10, name 数据的名字 默认为空
+	dataInit = (pageNum = 1, pageSize = 10, name = '') => {
 		// 初始请求前十条数据
-		this.setState({loading: true})
-		let data = getPageList(pageNum, pageSize);
-		data.then((res) => {
-			console.log(res)
-			this.setState({dataList: res.list, total:res.total,currentPage: res.pageNum, loading: false})		
-		}, err => {
-			message.error(err)
-		});
-
+		this.setState({ loading: true });
+		let data = getPageList(pageNum, pageSize, name);
+		data.then(
+			(res) => {
+				this.setState({
+					dataList: res.list,
+					total: res.total,
+					currentPage: res.pageNum,
+					loading: false,
+				});
+			},
+			(err) => {
+				message.error(err);
+			}
+		);
 	};
 	render() {
 		const {
@@ -227,9 +229,8 @@ export default class UserManage extends Component {
 			dataList,
 			visibleAdd,
 			visibleUpdate,
-			confirmLoading,
 			total,
-			currentPage
+			currentPage,
 		} = this.state;
 		const rowSelection = {
 			selectedRowKeys,
@@ -241,9 +242,9 @@ export default class UserManage extends Component {
 					title="新增"
 					visible={visibleAdd}
 					onOk={this.handleSubmit}
-					confirmLoading={confirmLoading}
 					onCancel={this.handleCancel}
 					style={{ minWidth: 580 }}
+					destroyOnClose="true"
 				>
 					<FromManage
 						wrappedComponentRef={(ref) => {
@@ -256,8 +257,8 @@ export default class UserManage extends Component {
 					title="修改"
 					visible={visibleUpdate}
 					onOk={this.handleUpdate}
-					confirmLoading={confirmLoading}
 					onCancel={this.handleCancel}
+					destroyOnClose="true"
 				>
 					<FromManage
 						wrappedComponentRef={(ref) => {
@@ -267,29 +268,37 @@ export default class UserManage extends Component {
 					{/* <WrappedNormalLoginForm />//增加ref属性，目的是获得form对象 */}
 				</Modal>
 				<Form
-					{...layout}
 					ref={this.formRef}
 					name="control-ref"
-					layout="inline"
 					className="form-content"
 					onFinish={this.onFinish}
 				>
-					<Form.Item
-						name="name"
-						label="客户姓名"
-						rules={[{ required: true, message: '请输入姓名' }]}
-					>
-						<Input placeholder="客户名称" />
-					</Form.Item>
+					<Row>
+						<Col xl={6} md={12} xs={24}>
+							<Form.Item
+								name="name"
+								label="客户姓名"
+								rules={[{ required: true, message: '请输入姓名' }]}
+							>
+								<Input placeholder="客户名称" allowClear />
+							</Form.Item>
+						</Col>
 
-					<Form.Item className="form-btn">
-						<Button type="primary" htmlType="submit" className="btn">
-							查询
-						</Button>
-						<Button htmlType="button" onClick={this.onReset} className="btn">
-							重置
-						</Button>
-					</Form.Item>
+						<Col xl={6} md={12} xs={24}>
+							<Form.Item className="form-btn">
+								<Button type="primary" htmlType="submit" className="btn">
+									查询
+								</Button>
+								<Button
+									htmlType="button"
+									onClick={this.onReset}
+									className="btn"
+								>
+									重置
+								</Button>
+							</Form.Item>
+						</Col>
+					</Row>
 				</Form>
 				<Divider />
 				<Space size={20} style={{ marginBottom: 20 }}>
@@ -310,7 +319,7 @@ export default class UserManage extends Component {
 						current: currentPage,
 						pageSize: 10,
 						showTotal: this.showTotal,
-						onChange:this.onPageChange
+						onChange: this.onPageChange,
 					}}
 					rowKey="id"
 					columns={columns}
