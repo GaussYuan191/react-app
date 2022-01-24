@@ -47,10 +47,7 @@ export default class index extends Component {
 								]}
 								labelCol={{ span: 6 }}
 								wrapperCol={{ span: 14 }}
-								initialValue={
-									
-									permission ? ( permission == '2' ? 'formal' : 'informal') : undefined
-								}
+								initialValue={permission}
 							> 
 								<Select placeholder="请选择" allowClear>
 									<Option value="informal">试用</Option>
