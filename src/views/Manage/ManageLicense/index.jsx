@@ -19,7 +19,7 @@ import { getLicenseList } from '@/api/getLicenseList.js';
 import { listAllSub } from '@/api/listAllSub.js';
 import { queryFunctionCode } from '@/api/queryFunctionCode.js';
 import { exportLicense } from '@/api/exportLicense.js';
-import moment from 'moment'; 
+import moment from 'moment';
 const { Option } = Select;
 const { Column } = Table;
 let data = [
@@ -53,9 +53,11 @@ export default class ManageLicense extends Component {
 		licenseData: [],
 		selectNode: [],
 		tempNode: [],
-		customerOptions: [],
 		visibleUpdate: false,
 		getLicense: () => {},
+		total: 10,
+		currentPage: 1,
+		loading: false,
 	};
 	onFinish = (values) => {
 		let { licenseData } = this.state;
@@ -72,6 +74,10 @@ export default class ManageLicense extends Component {
 		let { licenseData } = this.state;
 		this.setState({ licenseList: licenseData });
 		this.formRef.current.resetFields();
+	};
+	// 点击分页的处理
+	onPageChange = (page, pageSize) => {
+		this.dataInit(page, pageSize);
 	};
 	// 下载文件
 	downloadLicense = () => {
@@ -124,16 +130,16 @@ export default class ManageLicense extends Component {
 	};
 	// 处理修改提交
 	dealSubmit = () => {
-		const {licenseDefault} = this.setState;
-		this.baseInfoForm.current.validateFields().then(res=> {
-			console.log('验证',res);
-		})
-		console.log('开始提交')
-	}
+		const { licenseDefault } = this.setState;
+		this.baseInfoForm.current.validateFields().then((res) => {
+			console.log('验证', res);
+		});
+		console.log('开始提交');
+	};
 	// 处理修改后的结果
 	onTableChange = (data) => {
-		this.setState({licenseDefault:data})
-	}
+		this.setState({ licenseDefault: data });
+	};
 	// 删除权限数据
 	deleteLicense = () => {
 		console.log('开始删除');
@@ -238,9 +244,31 @@ export default class ManageLicense extends Component {
 	// 组件挂载
 	componentDidMount() {
 		this.dataInit();
+		this.dataTreeInit();
 	}
 	// 初始化数据
-	dataInit = () => {
+	dataInit = (pageNum = '1', pageSize = '10', permission = '') => {
+		this.setState({ loading: true });
+		let reqData = { pageNum: pageNum, pageSize: pageSize };
+		if (permission !== '') {
+			reqData.permission = permission;
+		}
+		console.log(reqData)
+		getLicenseList(reqData).then((res) => {
+			res.list.forEach((item) => {
+				item.key = item.id;
+			});
+			console.log(res);
+			this.setState({
+				licenseList: res.list,
+				total: res.total,
+				currentPage: res.pageNum,
+				loading: false,
+			});
+		});
+	};
+	// 初始化树形结构
+	dataTreeInit = () => {
 		let { licenseDefault } = this.state;
 		let resultList = [];
 		let newLicenseList = this.deepCopy(licenseDefault);
@@ -261,19 +289,6 @@ export default class ManageLicense extends Component {
 				console.log(err);
 			}
 		);
-
-		getLicenseList(1, 1000).then((res) => {
-			console.log(res);
-			let customerOptions = [];
-			res.list.forEach((item) => {
-				item.key = item.id;
-				customerOptions.push({
-					label: item.name,
-					value: item.id,
-				});
-			});
-			this.setState({ licenseList: res.list, customerOptions });
-		});
 	};
 	render() {
 		const {
@@ -283,11 +298,21 @@ export default class ManageLicense extends Component {
 			selectNode,
 			licenseDefault,
 			visibleUpdate,
+			loading,
+			total,
+			currentPage,
 		} = this.state;
-		let licensesTime = [], key, customerName, permission;
+		let licensesTime = [],
+			key,
+			customerName,
+			permission;
 		if (selectNode.length !== 0) {
-			let beginDate = selectNode[0].beginDate== null ? null :moment(selectNode[0].beginDate);
-			let endDate = selectNode[0].endDate== null ? null : moment(selectNode[0].endDate);
+			let beginDate =
+				selectNode[0].beginDate == null
+					? null
+					: moment(selectNode[0].beginDate);
+			let endDate =
+				selectNode[0].endDate == null ? null : moment(selectNode[0].endDate);
 			licensesTime.push(beginDate, endDate);
 			key = selectNode[0].key;
 			customerName = selectNode[0].customerName;
@@ -344,21 +369,24 @@ export default class ManageLicense extends Component {
 							this.baseInfoForm = ref;
 						}}
 						licensesTime={licensesTime}
-						customerList={[{label:customerName,value:key, key:key}]}
+						customerList={[{ label: customerName, value: key, key: key }]}
 						permission={permission}
 					></BaseInfo>
 					<Divider />
 
-					<LicenseInfo licenseList={licenseDefault} onTableChange={this.onTableChange}></LicenseInfo>
+					<LicenseInfo
+						licenseList={licenseDefault}
+						onTableChange={this.onTableChange}
+					></LicenseInfo>
 					<Divider />
 					<Space size={20}>
-					<Button type="primary" htmlType="submit"  onClick={this.dealSubmit}>
-						提交
-					</Button>
-					<Button htmlType="button" onClick={this.handleUpdateCancel}>
-						取消
-					</Button>
-				</Space> 
+						<Button type="primary" htmlType="submit" onClick={this.dealSubmit}>
+							提交
+						</Button>
+						<Button htmlType="button" onClick={this.handleUpdateCancel}>
+							取消
+						</Button>
+					</Space>
 				</Modal>
 				<Form ref={this.formRef} name="selectLicense" onFinish={this.onFinish}>
 					<Row>
@@ -409,11 +437,14 @@ export default class ManageLicense extends Component {
 					dataSource={licenseList}
 					bordered="true"
 					size="middle"
+					loading={loading}
 					rowSelection={({ type: 'checkbox' }, { onChange: this.onChange })}
 					pagination={{
-						total: licenseList.length,
+						total: total,
+						current: currentPage,
 						pageSize: 10,
 						showTotal: this.showTotal,
+						onChange: this.onPageChange,
 					}}
 				>
 					<Column

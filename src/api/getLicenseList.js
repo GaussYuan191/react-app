@@ -1,12 +1,9 @@
 import request from '@/utils/request';
 
-export function getLicenseList(reqPageNum, reqPageSize) {
+export function getLicenseList(reqData) {
 	return request({
 		url: '/license/pageList',
 		method: 'post',
-		data: {
-			reqPageNum: reqPageNum,
-			reqPageSize: reqPageSize,
-		},
+		data: reqData,
 	});
 }
