@@ -40,7 +40,6 @@ class HomeLink extends Component {
 		return breadcrumbName;
 	};
 	render() {
-		console.log(this.props);
 		return (
 
 				<Breadcrumb style={{lineHeight:"40px", marginLeft:"20px"}}>
