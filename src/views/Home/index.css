@@ -29,3 +29,6 @@
   background-color: #fff;
   padding: 10px 15px;
 }
+.ant-divider-horizontal {
+  margin: 12px 0 !important;
+}

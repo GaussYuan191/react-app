@@ -42,7 +42,7 @@ class HomeLink extends Component {
 	render() {
 		return (
 
-				<Breadcrumb style={{lineHeight:"40px", marginLeft:"20px"}}>
+				<Breadcrumb style={{lineHeight:"40px", paddingLeft:"20px",paddingBottom:"8px",backgroundColor: "rgba(240,242,245)"}}>
 					<Breadcrumb.Item href="">
 						<HomeOutlined style={{color: 'black'}}/>
 					</Breadcrumb.Item>

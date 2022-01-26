@@ -19,6 +19,7 @@ import { getLicenseList } from '@/api/getLicenseList.js';
 import { listAllSub } from '@/api/listAllSub.js';
 import { queryFunctionCode } from '@/api/queryFunctionCode.js';
 import { exportLicense } from '@/api/exportLicense.js';
+import { addLicense } from '@/api/addLicense.js';
 import moment from 'moment';
 const { Option } = Select;
 const { Column } = Table;
@@ -42,6 +43,10 @@ let data = [
 		children: [],
 	},
 ];
+// 保存提交的数据
+let resultData = {
+	version: '1.0',
+};
 export default class ManageLicense extends Component {
 	formRef = React.createRef();
 	baseInfoForm = React.createRef();
@@ -63,11 +68,7 @@ export default class ManageLicense extends Component {
 		let { licenseData } = this.state;
 		let { permission } = values;
 		let isPermission = permission == 'informal' ? '1' : '2';
-		let newLicenseList = licenseData.filter((item) => {
-			return item.permission == isPermission;
-		});
-		console.log(newLicenseList);
-		this.setState({ licenseList: newLicenseList });
+		this.dataInit(1, 10, isPermission);
 	};
 	// 重置搜索框
 	onReset = () => {
@@ -85,8 +86,11 @@ export default class ManageLicense extends Component {
 		if (selectNode.length == 0) {
 			message.error('请选择一条记录!');
 		} else {
-			let ids = selectNode.join();
-			exportLicense(ids).then(
+			let ids = [];
+			selectNode.forEach((item) => {
+				ids.push(item.id);
+			});
+			exportLicense(ids.join(',')).then(
 				(res) => {
 					let url = window.URL.createObjectURL(
 						new Blob([res.data], { type: res.data.type })
@@ -131,10 +135,59 @@ export default class ManageLicense extends Component {
 	// 处理修改提交
 	dealSubmit = () => {
 		const { licenseDefault } = this.setState;
-		this.baseInfoForm.current.validateFields().then((res) => {
-			console.log('验证', res);
+		this.baseInfoForm.current.validateFields().then((values) => {
+			if (values.permission == 'formal') {
+				resultData.permission = '2';
+				resultData.beginDate = null;
+				resultData.endDate = null;
+			} else {
+				resultData.permission = '1';
+				resultData.beginDate = values.times[0].format('YYYY-MM-DD');
+				resultData.endDate = values.times[1].format('YYYY-MM-DD');
+			}
+			let nodeList = [];
+			let getNode = (nodes) => {
+				if (nodes == null) return null;
+				if (nodes.children != null) {
+					nodes.children.forEach((item) => {
+						getNode(item);
+					});
+				} else {
+					let node = {};
+					node.code = nodes.key;
+					node.right = nodes.right;
+					node.name = nodes.name;
+					nodeList.push(node);
+				}
+			};
+			// 处理功能许可集合
+			getNode(licenseDefault[0]);
+			resultData.customerLicenseFunctionList = nodeList;
+			nodeList = [];
+			// 处理接口许可集合
+			getNode(licenseDefault[1]);
+			resultData.customerLicenseInterfaceList = nodeList;
+			nodeList = [];
+			// 处理数据许可集合
+			getNode(licenseDefault[2]);
+			resultData.customerLicenseDataList = nodeList;
+			nodeList = [];
+
+			resultData.customerId = values.customerId;
+			console.log('最后结果', resultData);
+			this.addLicenseInfo(resultData);
 		});
 		console.log('开始提交');
+	};
+	addLicenseInfo = (resultData) => {
+		addLicense(resultData).then(
+			(res) => {
+				message.success('新增成功');
+			},
+			(err) => {
+				console.log('err', err);
+			}
+		);
 	};
 	// 处理修改后的结果
 	onTableChange = (data) => {
@@ -222,6 +275,7 @@ export default class ManageLicense extends Component {
 	};
 	// 记录选中的值的数据
 	onChange = (selectedRowKeys, selectedRows) => {
+		console.log(selectedRows);
 		this.setState({ selectNode: selectedRows });
 	};
 	// 深拷贝
@@ -247,13 +301,13 @@ export default class ManageLicense extends Component {
 		this.dataTreeInit();
 	}
 	// 初始化数据
-	dataInit = (pageNum = '1', pageSize = '10', permission = '') => {
+	dataInit = (reqPageNum = 1, reqPageSize = 10, permission = '') => {
 		this.setState({ loading: true });
-		let reqData = { pageNum: pageNum, pageSize: pageSize };
+		let reqData = { reqPageNum: reqPageNum, reqPageSize: reqPageSize };
 		if (permission !== '') {
 			reqData.permission = permission;
 		}
-		console.log(reqData)
+		console.log(reqData);
 		getLicenseList(reqData).then((res) => {
 			res.list.forEach((item) => {
 				item.key = item.id;
@@ -390,29 +444,30 @@ export default class ManageLicense extends Component {
 				</Modal>
 				<Form ref={this.formRef} name="selectLicense" onFinish={this.onFinish}>
 					<Row>
-						<Col span={8}>
-							<Form.Item
-								name="permission"
-								label="许可类型"
-								labelCol={{ span: 6 }}
-								wrapperCol={{ span: 16 }}
-							>
-								<Select placeholder="请选择" allowClear>
+						<Col>
+							<Form.Item name="permission" label="许可类型">
+								<Select
+									placeholder="请选择"
+									allowClear
+									style={{ width: '200px', marginRight: '40px' }}
+								>
 									<Option value="informal">试用</Option>
 									<Option value="formal">正式</Option>
 								</Select>
 							</Form.Item>
 						</Col>
-						<Col span={4}>
+						<Col>
 							<Form.Item>
-								<Space size={20}>
-									<Button type="primary" htmlType="submit">
-										查询
-									</Button>
-									<Button htmlType="button" onClick={this.onReset}>
-										重置
-									</Button>
-								</Space>
+								<Button
+									type="primary"
+									htmlType="submit"
+									style={{ marginRight: '20px' }}
+								>
+									查询
+								</Button>
+								<Button htmlType="button" onClick={this.onReset}>
+									重置
+								</Button>
 							</Form.Item>
 						</Col>
 					</Row>

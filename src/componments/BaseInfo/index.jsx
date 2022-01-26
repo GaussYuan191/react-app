@@ -45,11 +45,10 @@ export default class index extends Component {
 										message: '请选择许可权限',
 									},
 								]}
-								labelCol={{ span: 6 }}
-								wrapperCol={{ span: 14 }}
+							
 								initialValue={permission}
 							> 
-								<Select placeholder="请选择" allowClear>
+								<Select placeholder="请选择" allowClear style={{width:"200px"}}>
 									<Option value="informal">试用</Option>
 									<Option value="formal">正式</Option>
 								</Select>
@@ -67,8 +66,7 @@ export default class index extends Component {
 										message: '请选择客户',
 									},
 								]}
-								labelCol={{ span: 4 }}
-								wrapperCol={{ span: 14 }}
+								
 								initialValue={customerList && customerList[0].value}
 							>
 								<Select
@@ -76,6 +74,7 @@ export default class index extends Component {
 									placeholder="请选择"
 									optionFilterProp="label"
 									allowClear
+									style={{width:"200px"}}
 									options={customerList}
 									disabled={customerList && customerList.length == 1}
 									filterOption={(inputValue, option) => {
@@ -105,11 +104,10 @@ export default class index extends Component {
 											name="times"
 											label="许可期限"
 											{...rangeConfig}
-											labelCol={{ span: 6 }}
-											wrapperCol={{ span: 14 }}
+											
 											initialValue={licensesTime ? (licensesTime[0] == null ? undefined : licensesTime) : undefined}
 										>
-											<RangePicker />
+											<RangePicker style={{width:"200px"}}/>
 										</Form.Item>
 									) : null
 								}
