@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { Switch, Route, Redirect } from 'react-router-dom';
 import { routers } from './config';
-
 export default class Routers extends Component {
 	render() {
 		const routerList = routers;

@@ -26,7 +26,7 @@ export default class Home  extends Component {
             
             <Headers></Headers>
           </Header>
-          {/* <HomeLink></HomeLink> */}
+          <HomeLink></HomeLink>
           <Content
             className="site-layout-background"
             style={{
