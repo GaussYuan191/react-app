@@ -274,19 +274,20 @@ export default class UserManage extends Component {
 					onFinish={this.onFinish}
 				>
 					<Row>
-						<Col xl={6} md={12} xs={24}>
+						<Col>
 							<Form.Item
 								name="name"
 								label="客户姓名"
 								rules={[{ required: true, message: '请输入姓名' }]}
+								style={{marginRight:"40px"}}
 							>
 								<Input placeholder="客户名称" allowClear />
 							</Form.Item>
 						</Col>
 
-						<Col xl={6} md={12} xs={24}>
+						<Col>
 							<Form.Item className="form-btn">
-								<Button type="primary" htmlType="submit" className="btn">
+								<Button type="primary" htmlType="submit" className="btn" style={{marginRight:"20px"}}>
 									查询
 								</Button>
 								<Button

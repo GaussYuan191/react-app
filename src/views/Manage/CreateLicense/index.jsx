@@ -7,31 +7,34 @@ import { listAllSub } from '@/api/listAllSub.js';
 import { queryFunctionCode } from '@/api/queryFunctionCode.js';
 import { addLicense } from '@/api/addLicense.js';
 import { message, Divider, Space, Button } from 'antd';
-import { values } from 'lodash';
+
 let data = [
 	{
 		key: 'customerLicenseFunctionList',
 		name: '功能许可',
-		right: "1",
+		right: '1',
 		children: [],
 	},
 	{
 		key: 'customerLicenseInterfaceList',
 		name: '接口许可',
-		right: "1",
+		right: '1',
 		children: [],
 	},
 	{
 		key: 'customerLicenseDataList',
 		name: '数据许可',
-		right: "1",
+		right: '1',
 		children: [],
 	},
 ];
-
+// 保存提交的数据
+let resultData = {
+	version: '1.0',
+};
 export default class CreateLicense extends Component {
 	baseInfoForm = React.createRef();
-	state = { defaultCustomerList: [], licenseList: data,getLicense: ()=>{} };
+	state = { defaultCustomerList: [], licenseList: data, getLicense: () => {} };
 	// 深拷贝对象
 	deepCopy = (object) => {
 		if (!object || typeof object !== 'object') return null;
@@ -60,7 +63,7 @@ export default class CreateLicense extends Component {
 		}
 		nums.name = nums.menuName || nums.dicExplain;
 		nums.key = nums.menuCode || nums.dicCode;
-		nums.right = "1"; // 初始化权限
+		nums.right = '1'; // 初始化权限
 		nums.parentKey = parentKey; // 绑定祖父节点的key
 	};
 	dealLicense = (defaultLicenseList) => {
@@ -76,19 +79,19 @@ export default class CreateLicense extends Component {
 			});
 			newLicenseList[index].children = arr;
 		});
-		console.log("处理结果", newLicenseList)
+		console.log('处理结果', newLicenseList);
 		this.setState({ licenseList: newLicenseList });
 	};
 	// 处理客户数据
 	dealCustomer = (lists) => {
-        if ( lists == null || lists == undefined || lists.length == 0 ) return;
+		if (lists == null || lists == undefined || lists.length == 0) return;
 		let newList = [];
 		// label 为显示的值, value 为选中的值
 		lists.map((item) => {
 			newList.push({ label: item.name, value: item.id, key: item.id });
 		});
 		return newList;
-	}
+	};
 
 	dataInit = () => {
 		let resultList = [];
@@ -98,7 +101,7 @@ export default class CreateLicense extends Component {
 		resultList.push(listAllSub(1030308));
 		Promise.all(resultList).then(
 			(res) => {
-				this.dealLicense(res)
+				this.dealLicense(res);
 			},
 			(err) => {
 				console.log(err);
@@ -106,8 +109,8 @@ export default class CreateLicense extends Component {
 		);
 		getPageList(1, 1000).then(
 			(res) => {
-				let newList = this.dealCustomer(res.list)
-				console.log('sss',newList)
+				let newList = this.dealCustomer(res.list);
+				console.log('sss', newList);
 				this.setState({ customerList: newList });
 			},
 			(err) => {
@@ -116,15 +119,54 @@ export default class CreateLicense extends Component {
 		);
 	};
 	dealSubmit = () => {
-		let {licenseList} = this.state;
-		this.baseInfoForm.current.validateFields().then(res=> {
-			console.log('验证',res);
-			console.log('aa', licenseList)
-		})
-	}
-	componentDidMount ()  {
-		this.dataInit();
+		let { licenseList } = this.state;
+		// 如果是正式的权限
+		this.baseInfoForm.current.validateFields().then((values) => {
+			if (values.permission == 'formal') {
+				resultData.permission = '2';
+				resultData.beginDate = null;
+				resultData.endDate = null;
+			} else {
+				resultData.permission = '1';
+				resultData.beginDate = values.times[0].format('YYYY-MM-DD');
+				resultData.endDate = values.times[1].format('YYYY-MM-DD');
+			}
+			let nodeList = [];
+			let getNode = (nodes) => {
+				if (nodes == null) return null;
+				if (nodes.children != null) {
+					nodes.children.forEach((item) => {
+						getNode(item);
+					});
+				} else {
+					let node = {};
+					node.code = nodes.key;
+					node.right = nodes.right;
+					node.name = nodes.name;
+					nodeList.push(node);
+				}
+			};
+			// 处理功能许可集合
+			getNode(licenseList[0]);
+			resultData.customerLicenseFunctionList = nodeList;
+			nodeList = [];
+			// 处理接口许可集合
+			getNode(licenseList[1]);
+			resultData.customerLicenseInterfaceList = nodeList;
+			nodeList = [];
+			// 处理数据许可集合
+			getNode(licenseList[2]);
+			resultData.customerLicenseDataList = nodeList;
+			nodeList = [];
+
+			resultData.customerId = values.customerId;
+			console.log('最后结果', resultData);
+			this.addLicenseInfo(resultData);
+		});
 	};
+	componentDidMount() {
+		this.dataInit();
+	}
 	addLicenseInfo = (resultData) => {
 		addLicense(resultData).then(
 			(res) => {
@@ -136,9 +178,9 @@ export default class CreateLicense extends Component {
 		);
 	};
 	onTableChange = (values) => {
-		console.log("从子组件获得", values)
-		this.setState({licenseList: values});
-	}
+		console.log('从子组件获得', values);
+		this.setState({ licenseList: values });
+	};
 	render() {
 		const { licenseList, customerList } = this.state;
 
@@ -151,10 +193,13 @@ export default class CreateLicense extends Component {
 					customerList={customerList}
 				></BaseInfo>
 				<Divider />
-				<LicenseInfo licenseList={licenseList} onTableChange={this.onTableChange}></LicenseInfo>
+				<LicenseInfo
+					licenseList={licenseList}
+					onTableChange={this.onTableChange}
+				></LicenseInfo>
 				<Divider />
 				<Space size={20}>
-					<Button type="primary" htmlType="submit"  onClick={this.dealSubmit}>
+					<Button type="primary" htmlType="submit" onClick={this.dealSubmit}>
 						提交
 					</Button>
 					<Button htmlType="button" onClick={this.onReset}>
@@ -163,8 +208,5 @@ export default class CreateLicense extends Component {
 				</Space>
 			</div>
 		);
-		// return <LicenseInfo defaultLicenseList={defaultLicenseList} defaultCustomerList={defaultCustomerList}>
-
-		// </LicenseInfo>
 	}
 }
