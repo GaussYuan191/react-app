@@ -19,7 +19,7 @@ import { getLicenseList } from '@/api/getLicenseList.js';
 import { listAllSub } from '@/api/listAllSub.js';
 import { queryFunctionCode } from '@/api/queryFunctionCode.js';
 import { exportLicense } from '@/api/exportLicense.js';
-import { addLicense } from '@/api/addLicense.js';
+import { updateLicense } from '@/api/updateLicense.js';
 import moment from 'moment';
 const { Option } = Select;
 const { Column } = Table;
@@ -134,8 +134,10 @@ export default class ManageLicense extends Component {
 	};
 	// 处理修改提交
 	dealSubmit = () => {
-		const { licenseDefault } = this.setState;
+		const { licenseDefault, selectNode } = this.state;
+		console.log('dd',selectNode)
 		this.baseInfoForm.current.validateFields().then((values) => {
+			console.log(values, values.permission == 'formal')
 			if (values.permission == 'formal') {
 				resultData.permission = '2';
 				resultData.beginDate = null;
@@ -174,15 +176,18 @@ export default class ManageLicense extends Component {
 			nodeList = [];
 
 			resultData.customerId = values.customerId;
+			resultData.id = selectNode[0].id;
 			console.log('最后结果', resultData);
-			this.addLicenseInfo(resultData);
+			this.updateLicenseInfo(resultData);
 		});
 		console.log('开始提交');
 	};
-	addLicenseInfo = (resultData) => {
-		addLicense(resultData).then(
+	updateLicenseInfo = (resultData) => {
+		updateLicense(resultData).then(
 			(res) => {
-				message.success('新增成功');
+				message.success('修改成功');
+				this.dataInit()
+				this.handleUpdateCancel()
 			},
 			(err) => {
 				console.log('err', err);

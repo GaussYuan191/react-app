@@ -14,7 +14,7 @@ const rangeConfig = {
 };
 
 export default class index extends Component {
-	state = { customerList: [], permission: null,licensesTime: [] };
+	state = { customerList: [], permission: null, licensesTime: [] };
 	constructor(props) {
 		super(props);
 		this.baseInfoForm = React.createRef();
@@ -27,9 +27,9 @@ export default class index extends Component {
 	render() {
 		const { customerList, permission, licensesTime } = this.state;
 		console.log(this.state, this.baseInfoForm, '基本信息页面');
-		
-			console.log('per',permission)
-		
+
+		console.log('per', permission);
+
 		return (
 			<Form ref={this.baseInfoForm} name="lincenseList">
 				<Card title="基本信息" headStyle={{ backgroundColor: '#d9edf7' }}>
@@ -45,10 +45,13 @@ export default class index extends Component {
 										message: '请选择许可权限',
 									},
 								]}
-							
-								initialValue={permission}
-							> 
-								<Select placeholder="请选择" allowClear style={{width:"200px"}}>
+								initialValue={permission == '2' ? 'formal' : 'informal'}
+							>
+								<Select
+									placeholder="请选择"
+									allowClear
+									style={{ width: '200px' }}
+								>
 									<Option value="informal">试用</Option>
 									<Option value="formal">正式</Option>
 								</Select>
@@ -66,7 +69,6 @@ export default class index extends Component {
 										message: '请选择客户',
 									},
 								]}
-								
 								initialValue={customerList && customerList[0].value}
 							>
 								<Select
@@ -74,7 +76,7 @@ export default class index extends Component {
 									placeholder="请选择"
 									optionFilterProp="label"
 									allowClear
-									style={{width:"200px"}}
+									style={{ width: '200px' }}
 									options={customerList}
 									disabled={customerList && customerList.length == 1}
 									filterOption={(inputValue, option) => {
@@ -95,19 +97,22 @@ export default class index extends Component {
 								shouldUpdate={(prevValues, currentValues) =>
 									prevValues.permission !== currentValues.permission
 								}
-								
 							>
 								{({ getFieldValue }) =>
-								
 									getFieldValue('permission') === 'informal' ? (
 										<Form.Item
 											name="times"
 											label="许可期限"
 											{...rangeConfig}
-											
-											initialValue={licensesTime ? (licensesTime[0] == null ? undefined : licensesTime) : undefined}
+											initialValue={
+												licensesTime
+													? licensesTime[0] == null
+														? undefined
+														: licensesTime
+													: undefined
+											}
 										>
-											<RangePicker style={{width:"200px"}}/>
+											<RangePicker style={{ width: '200px' }} />
 										</Form.Item>
 									) : null
 								}
